@@ -7,6 +7,65 @@ from tensorflow.keras import layers
 from tensorflow.keras import backend as K
 
 
+
+class FFTLayer(layers.Layer):
+    """Attention with FFT implementation.
+    """
+
+    def __init__(self, dim=200, seed=0, **kwargs):
+        """Initialization steps for FFTLayer.
+        """
+
+        self.seed = seed
+        self.dim = dim
+        self.feed_forward = tf.keras.models.Sequential()
+
+        super(FFTLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        """Initialization for internal layers in FFTLayer.
+
+        Args:
+            input_shape (obj): shape of input tensor.
+        """
+
+        
+        self.feed_forward.add(tf.keras.Input(shape=(input_shape[-1],)))
+        # This layer could be GELU
+        self.feed_forward.add(tf.keras.layers.Dense(self.dim/2, activation='relu'))
+        self.feed_forward.add(tf.keras.layers.Dropout(0.2))
+        self.feed_forward.add(tf.keras.layers.Dense(self.dim*2, activation='linear'))
+        self.feed_forward.add(tf.keras.layers.Dropout(0.2))
+
+
+        super(FFTLayer, self).build(input_shape)  # be sure you call this somewhere!
+
+    def call(self, inputs, **kwargs):
+        """Core implemention of fft attention.
+
+        Args:
+            inputs (obj): input tensor.
+
+        Returns:
+            obj: weighted sum of input tensors.
+        """
+
+        fft1 = tf.signal.fft2d(tf.cast(inputs, tf.complex64))
+
+        return  K.sum(self.feed_forward(tf.math.real(fft1)), axis=1)
+
+    def compute_output_shape(self, input_shape):    
+        """Compute shape of output tensor
+
+        Args:
+            input_shape (tuple): shape of input tensor.
+        
+        Returns:
+            tuple: shape of output tensor.
+        """
+        return input_shape[0], input_shape[-1]
+
+
 class AttLayer2(layers.Layer):
     """Soft alignment attention implement.
 
