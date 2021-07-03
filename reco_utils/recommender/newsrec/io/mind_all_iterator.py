@@ -132,6 +132,7 @@ class MINDAllIterator(BaseIterator):
         self.labels = []
         self.impr_indexes = []
         self.uindexes = []
+        self.times = []
 
         with tf.io.gfile.GFile(behaviors_file, "r") as rd:
             impr_index = 0
@@ -152,6 +153,7 @@ class MINDAllIterator(BaseIterator):
                 self.labels.append(label)
                 self.impr_indexes.append(impr_index)
                 self.uindexes.append(uindex)
+                self.times.append(time)
                 impr_index += 1
 
     def parser_one_line(self, line):
